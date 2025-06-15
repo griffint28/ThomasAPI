@@ -2,33 +2,54 @@ from flask import Flask, jsonify, request, abort
 
 app = Flask(__name__)
 
-# Data (using a dictionary for now, but consider a database for real-world apps)
 data = {
     "thomas": {
-        "experience": [],  # Initialize as empty list
+        "experience": [],
         "education": [],
         "skills": []
     }
 }
 
 
+def validate_experience(experience_data):
+    if not isinstance(experience_data, list):
+        return False
+
+    for entry in experience_data:
+        if not isinstance(entry, dict):
+            return False
+
+        required_keys = ["title", "company", "years"]
+        if not all(key in entry for key in required_keys):
+            return False
+
+        if not isinstance(entry["title"], str) or not isinstance(entry["company"], str) or not isinstance(
+                entry["years"], str):
+            return False
+    return True
+
+
 @app.route('/<string:name>/<string:attribute>', methods=['GET', 'POST'])
 def get_info(name, attribute):
     if request.method == 'POST':
-        # Get data from the request body
+
         new_data = request.get_json()
 
         if not new_data:
             abort(400, description="No data provided in request body.")
 
+        if attribute == "experience":
+            if not validate_experience(new_data):
+                abort(400, description="Invalid experience data format.")
+
         if name not in data:
-            data[name] = {}  # Create user's entry if it doesn't exist
-        data[name][attribute] = new_data  # Store experience
+            data[name] = {}
+
+        data[name][attribute] = new_data
         return jsonify({"message": "Information added successfully"}), 201
 
 
     elif request.method == 'GET':
-
         if not name in data:
             abort(404, description=f"User '{name}' not found.")
 
