@@ -1,7 +1,6 @@
 from flask import jsonify
 
-
-def register_error_handlers(app):  # Takes the app instance
+def register_error_handlers(app):
     @app.errorhandler(404)
     def not_found(error):
         return jsonify(error=str(error)), 404
